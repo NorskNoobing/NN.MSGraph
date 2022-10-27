@@ -5,7 +5,7 @@
 [string]$ProjectUri = "https://github.com/$author/$moduleName"
 [string]$releaseNotes = "Initial commit"
 [string]$description = "MSGraph API integration"
-[array]$tags = @("MSGraph","Graph","Microsoft Graph","API","Microsoft Graph API")
+[array]$tags = @("MSGraph","Graph","Microsoft","API")
 [version]$PSversion = "7.2"
 
 $manifestSplat = @{
