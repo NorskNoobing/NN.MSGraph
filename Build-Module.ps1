@@ -1,9 +1,9 @@
 #Requires -Module ModuleBuilder
 [string]$moduleName = "NN.MSGraph"
-[version]$version = "0.0.1"
+[version]$version = "0.0.2"
 [string]$author = "NorskNoobing"
 [string]$ProjectUri = "https://github.com/$author/$moduleName"
-[string]$releaseNotes = "Initial commit"
+[string]$releaseNotes = "Split credential functions into interactive functions (New-*) and non-interactive functions (Get-*)"
 [string]$description = "MSGraph API integration"
 [array]$tags = @("MSGraph","Graph","Microsoft","API")
 [version]$PSversion = "7.2"
