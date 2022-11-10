@@ -14,5 +14,6 @@ function Get-MgShiftTimeOffReasonList {
             "MS-APP-ACTS-AS" = $actAsUID
         }
     }
-    Invoke-RestMethod @splat
+    $result = Invoke-RestMethod @splat
+    $result.value
 }
