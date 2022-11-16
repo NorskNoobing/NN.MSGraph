@@ -1,4 +1,4 @@
-function Get-MgUser {
+function Get-MgApiUser {
     param (
         [Parameter(Mandatory)]$identifier
     )
