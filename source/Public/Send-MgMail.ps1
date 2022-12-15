@@ -3,8 +3,9 @@ function Send-MgMail {
     param (
         [Parameter(Mandatory)][string]$Identifier,
         [string]$Subject,
-        [string]$Content,
-        [array]$ToRecipients,
+        [Parameter(Mandatory,ParameterSetName="Send txt mail")][string]$Content,
+        [Parameter(Mandatory,ParameterSetName="Send html mail")][string]$HtmlContent,
+        [Parameter(Mandatory)][array]$ToRecipients,
         [array]$CcRecipients,
         [bool]$SaveToSentItems = $true
     )
@@ -36,6 +37,21 @@ function Send-MgMail {
             )
         })
 
+        switch ($PsCmdlet.ParameterSetName) {
+            "Send txt mail" {
+                $MsgBody = @{
+                    "contentType" = "Text"
+                    "content" = $Content
+                }
+            }
+            "Send html mail" {
+                $MsgBody = @{
+                    "contentType" = "HTML"
+                    "content" = $HtmlContent
+                }
+            }
+        }
+
         $Splat = @{
             "Method" = "POST"
             "Uri" = "https://graph.microsoft.com/v1.0/users/$Identifier/sendMail"
@@ -46,10 +62,7 @@ function Send-MgMail {
             "Body" = @{
                 "message" = @{
                     "subject" = $Subject
-                    "body" = @{
-                        "contentType" = "Text"
-                        "content" = $Content
-                    }
+                    "body" = $MsgBody
                     "toRecipients" = $ToRecipientsArr
                     "ccRecipients" = $CcRecipientsArr
                 }
