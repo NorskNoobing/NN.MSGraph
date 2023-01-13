@@ -1,5 +1,6 @@
 function New-MgSecret {
     param (
+        [Parameter(Mandatory)]$CustomKeyIdentifier,
         #ObjectId of the Azure application
         $objectIdPath = "$env:USERPROFILE\.creds\MSGraph\msgraphObjectId.xml",
         $secretPath = "$env:USERPROFILE\.creds\MSGraph\msgraphSecret.xml"
@@ -32,7 +33,7 @@ function New-MgSecret {
     #Connect to the Azure account
     $null = Connect-AzAccount
     #Create a new secret
-    $result = New-AzADAppCredential -ObjectId $objectId -CustomKeyIdentifier "TeamBrukeropplevelse"
+    $result = New-AzADAppCredential -ObjectId $objectId -CustomKeyIdentifier $CustomKeyIdentifier
     #Export secret to the secret file
     $result | ConvertTo-SecureString -AsPlainText | Export-Clixml $secretPath -Force
     #Output the eol date of the secret
