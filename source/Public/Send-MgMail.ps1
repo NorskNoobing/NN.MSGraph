@@ -52,6 +52,16 @@ function Send-MgMail {
             }
         }
 
+        $Body = @{
+            "message" = @{
+                "subject" = $Subject
+                "body" = $MsgBody
+                "toRecipients" = $ToRecipientsArr
+                "ccRecipients" = $CcRecipientsArr
+            }
+            "saveToSentItems" = $SaveToSentItems
+        } | ConvertTo-Json -Depth 10
+
         $Splat = @{
             "Method" = "POST"
             "Uri" = "https://graph.microsoft.com/v1.0/users/$Identifier/sendMail"
@@ -59,15 +69,7 @@ function Send-MgMail {
                 "Authorization" = "Bearer $(Get-MgAccessToken)"
                 "Content-type" = "application/json"
             }
-            "Body" = @{
-                "message" = @{
-                    "subject" = $Subject
-                    "body" = $MsgBody
-                    "toRecipients" = $ToRecipientsArr
-                    "ccRecipients" = $CcRecipientsArr
-                }
-                "saveToSentItems" = $SaveToSentItems
-            } | ConvertTo-Json -Depth 10
+            "Body" = [System.Text.Encoding]::UTF8.GetBytes($Body)
         }
         Invoke-RestMethod @Splat
     }
