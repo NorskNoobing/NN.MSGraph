@@ -18,21 +18,21 @@ function New-MgSecret {
         $objectId = Read-Host "Enter MSGraph objectId"
         $objectId | ConvertTo-SecureString -AsPlainText | Export-Clixml $objectIdPath
     }
-    
+
     #Install required modules
-    $requiredModules = @("Az.Accounts","Az.Resources")
-    $requiredModules.ForEach({
-        if (Get-InstalledModule $_) {
+    $RequiredModulesNameArray = @("Az.Accounts","Az.Resources")
+    $RequiredModulesNameArray.ForEach({
+        if (Get-InstalledModule $_ -ErrorAction SilentlyContinue) {
             Import-Module $_ -Force
         } else {
-            Install-Module $_ -Force
+            Install-Module $_ -Force -Repository PSGallery
         }
     })
 
     #Connect to the Azure account
     $null = Connect-AzAccount
     #Create a new secret
-    $result = New-AzADAppCredential -ObjectId $objectId -CustomKeyIdentifier "NN.MSGraph"
+    $result = New-AzADAppCredential -ObjectId $objectId
     #Export secret to the secret file
     $result | ConvertTo-SecureString -AsPlainText | Export-Clixml $secretPath -Force
     #Output the eol date of the secret
