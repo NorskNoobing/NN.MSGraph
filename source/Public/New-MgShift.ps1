@@ -1,28 +1,36 @@
 function New-MgShift {
     param (
-        [Parameter(Mandatory)]$userId,
-        [Parameter(Mandatory)]$startDateTime,
-        [Parameter(Mandatory)]$endDateTime,
-        [Parameter(Mandatory)]$shiftType,
-        [Parameter(Mandatory)]$theme,
-        [Parameter(Mandatory)]$schedulingGroupId,
+        [Parameter(Mandatory)][string]$userId,
+        [Parameter(Mandatory)][datetime]$startDateTime,
+        [Parameter(Mandatory)][datetime]$endDateTime,
+        [Parameter(Mandatory)][string]$displayName,
+        [Parameter(Mandatory)][string]$theme,
+        [Parameter(Mandatory)][string]$schedulingGroupId,
         #Id of the Team to get shifts from
-        [Parameter(Mandatory)]$teamId,
+        [Parameter(Mandatory)][string]$teamId,
         #Id of the user that the request is sent on the behalf of
-        [Parameter(Mandatory)]$actAsUID,
+        [Parameter(Mandatory)][string]$actAsUID,
+        [Parameter(Mandatory)][ValidateSet("sharedShift","draftShift")][string]$shiftType,
         [string]$notes
     )
 
-    #Convert from current TZ to UTC
-    $strCurrentTZ = (Get-CimInstance win32_timezone).StandardName
-    $TZ = [System.TimeZoneInfo]::FindSystemTimeZoneById($strCurrentTZ)
-    $shiftStartDateTime = [System.TimeZoneInfo]::ConvertTimeToUtc($startDateTime, $TZ)
-    $shiftEndDateTime = [System.TimeZoneInfo]::ConvertTimeToUtc($endDateTime, $TZ)
+    #Convert to "ISO 8601" date format and UTC timezone, which is supported in json queries
+    $convertedStartDateTime = [Xml.XmlConvert]::ToString($startDateTime,[Xml.XmlDateTimeSerializationMode]::Utc)
+    $convertedEndDateTime = [Xml.XmlConvert]::ToString($endDateTime,[Xml.XmlDateTimeSerializationMode]::Utc)
 
-    #Convert to "ISO 8601" date format, which is supported in json queries
-    $convertedStartDateTime = [Xml.XmlConvert]::ToString($shiftStartDateTime,[Xml.XmlDateTimeSerializationMode]::Utc)
-    $convertedEndDateTime = [Xml.XmlConvert]::ToString($shiftEndDateTime,[Xml.XmlDateTimeSerializationMode]::Utc)
-    
+    $Body = @{
+        "userId" = $userId
+        "schedulingGroupId" = $schedulingGroupId
+        "$shiftType" = @{
+            "@odata.type" = "microsoft.graph.shiftItem"
+            "displayName" = $displayName
+            "startDateTime" = $convertedStartDateTime
+            "endDateTime" = $convertedEndDateTime
+            "notes" = $notes
+            "theme" = $theme
+        }
+    }
+
     $splat = @{
         "Method" = "POST"
         "Uri" = "https://graph.microsoft.com/v1.0/teams/$teamId/schedule/shifts"
@@ -31,18 +39,7 @@ function New-MgShift {
             "Content-type" = "application/json"
             "MS-APP-ACTS-AS" = $actAsUID
         }
-        "Body" = @{
-            "userId" = $userId
-            "schedulingGroupId" = $schedulingGroupId
-            "sharedShift" = @{
-                "@odata.type" = "microsoft.graph.shiftItem"
-                "displayName" = $shiftType
-                "notes" = $notes
-                "startDateTime" = $convertedStartDateTime
-                "endDateTime" = $convertedEndDateTime
-                "theme" = $theme
-            }
-        } | ConvertTo-Json
+        "Body" = [System.Text.Encoding]::UTF8.GetBytes(($Body | ConvertTo-Json))
     }
     Invoke-RestMethod @splat
 }

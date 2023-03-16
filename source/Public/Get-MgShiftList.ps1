@@ -10,6 +10,8 @@ function Get-MgShiftList {
         [Parameter(ParameterSetName="Get shifts within timeframe")][datetime]$dateTo,
         [Parameter(ParameterSetName="List shifts")][switch]$ListShifts
     )
+    
+    $splat = $ExportObjects = $null
 
     switch ($PsCmdlet.ParameterSetName) {
         "Get shifts within timeframe" {

@@ -1,26 +1,33 @@
 function New-MgShiftTimeOff {
     param (
-        [Parameter(Mandatory)]$userId,
-        [Parameter(Mandatory)]$startDateTime,
-        [Parameter(Mandatory)]$endDateTime,
-        [Parameter(Mandatory)]$timeOffReasonId,
+        [Parameter(Mandatory)][string]$userId,
+        [Parameter(Mandatory)][datetime]$startDateTime,
+        [Parameter(Mandatory)][datetime]$endDateTime,
+        [Parameter(Mandatory)][string]$timeOffReasonId,
         #Id of the Team to get shifts from
-        [Parameter(Mandatory)]$teamId,
+        [Parameter(Mandatory)][string]$teamId,
         #Id of the user that the request is sent on the behalf of
-        [Parameter(Mandatory)]$actAsUID,
-        [string]$notes,
-        $theme = "gray"
+        [Parameter(Mandatory)][string]$actAsUID,
+        [Parameter(Mandatory)][string]$theme,
+        [Parameter(Mandatory)][ValidateSet("draftTimeOff","sharedTimeOff")][string]$timeOffType,
+        [string]$notes
     )
 
-    #Convert from current TZ to UTC
-    $strCurrentTZ = (Get-CimInstance win32_timezone).StandardName
-    $TZ = [System.TimeZoneInfo]::FindSystemTimeZoneById($strCurrentTZ)
-    $shiftStartDateTime = [System.TimeZoneInfo]::ConvertTimeToUtc($startDateTime, $TZ)
-    $shiftEndDateTime = [System.TimeZoneInfo]::ConvertTimeToUtc($endDateTime, $TZ)
-
     #Convert to "ISO 8601" date format, which is supported in json queries
-    $convertedStartDateTime = [Xml.XmlConvert]::ToString($shiftStartDateTime,[Xml.XmlDateTimeSerializationMode]::Utc)
-    $convertedEndDateTime = [Xml.XmlConvert]::ToString($shiftEndDateTime,[Xml.XmlDateTimeSerializationMode]::Utc)
+    $convertedStartDateTime = [Xml.XmlConvert]::ToString($startDateTime,[Xml.XmlDateTimeSerializationMode]::Utc)
+    $convertedEndDateTime = [Xml.XmlConvert]::ToString($endDateTime,[Xml.XmlDateTimeSerializationMode]::Utc)
+
+    $Body = @{
+        "userId" = $userId
+        "$timeOffType" = @{
+            "@odata.type" = "microsoft.graph.timeOffItem"
+            "timeOffReasonId" = $timeOffReasonId
+            "startDateTime" = $convertedStartDateTime
+            "endDateTime" = $convertedEndDateTime
+            "theme" = $theme
+            "notes" = $notes
+        }
+    }
     
     $splat = @{
         "Method" = "POST"
@@ -30,17 +37,7 @@ function New-MgShiftTimeOff {
             "Content-type" = "application/json"
             "MS-APP-ACTS-AS" = $actAsUID
         }
-        "Body" = @{
-            "userId" = $userId
-            "sharedTimeOff" = @{
-                "@odata.type" = "microsoft.graph.timeOffItem"
-                "timeOffReasonId" = $timeOffReasonId
-                "notes" = $notes
-                "startDateTime" = $convertedStartDateTime
-                "endDateTime" = $convertedEndDateTime
-                "theme" = $theme
-            }
-        } | ConvertTo-Json
+        "Body" = [System.Text.Encoding]::UTF8.GetBytes(($Body | ConvertTo-Json))
     }
     Invoke-RestMethod @splat
 }
